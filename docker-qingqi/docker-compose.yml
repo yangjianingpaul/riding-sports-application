@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:4.0.3
+    container_name: mongodb-qingqi-server
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+      - MONGO_INITDB_DATABASE=qingqi
+      - MONGO_INITDB_ROOT_USERNAME=qingqi
+      - MONGO_INITDB_ROOT_PASSWORD=oudqBFGmGY8pU6WS
+    ports:
+      - "27018:27017"
+    volumes:
+      - ./mongodb/data:/data/db
+      - ./mongodb/logs:/data/logs
+      - ./mongodb/config:/data/configdb
+    command: mongod --config /etc/mongo/mongod.conf
+  hmqq:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: hmqq
+    ports:
+      - "6688:6688"
+    networks:
+      - hm-net
+    depends_on:
+      - mongodb
+  redis:
+    image: redis
+    container_name: redis
+    environment:
+      - TZ=Asia/Shanghai
+      - requirepass=password
+    ports:
+      - 6399:6379
+    command: ["redis-server","/etc/redis/conf/redis.conf"]
+    volumes:
+      - ./redis/conf:/etc/redis/conf
+      - ./redis/data:/data
+    networks:
+      - hm-net
+    restart: always
+networks:
+  hm-net:
+    name: hmqq
